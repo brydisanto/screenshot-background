@@ -23,6 +23,7 @@ import {
   RefreshCcw,
   AlertTriangle,
   Sparkles,
+  GripVertical,
 } from "lucide-react";
 import {
   BUILTIN_PRESETS,
@@ -279,6 +280,54 @@ export default function AdminPage() {
     if (ok) toast.success("Duplicated");
   }
 
+  // ---- Drag & drop reordering ----
+  const dragIdRef = useRef<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
+  function handleDragStart(e: React.DragEvent, id: string) {
+    dragIdRef.current = id;
+    setDragId(id);
+    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", id);
+    } catch {
+      /* Safari */
+    }
+  }
+
+  function handleDragOver(e: React.DragEvent, id: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (id !== dropTargetId) setDropTargetId(id);
+  }
+
+  function handleDragLeave(id: string) {
+    if (dropTargetId === id) setDropTargetId(null);
+  }
+
+  async function handleDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    const draggedId = dragIdRef.current;
+    setDragId(null);
+    setDropTargetId(null);
+    dragIdRef.current = null;
+    if (!draggedId || draggedId === targetId) return;
+    const fromIdx = presets.findIndex((p) => p.id === draggedId);
+    const toIdx = presets.findIndex((p) => p.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = [...presets];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    await persist(next);
+  }
+
+  function handleDragEnd() {
+    dragIdRef.current = null;
+    setDragId(null);
+    setDropTargetId(null);
+  }
+
   async function move(id: string, dir: -1 | 1) {
     const idx = presets.findIndex((p) => p.id === id);
     if (idx < 0) return;
@@ -391,6 +440,19 @@ export default function AdminPage() {
       return !def || def.id !== p.id || def.name !== p.name;
     });
   }, [presets]);
+
+  const missingBuiltins = useMemo(() => {
+    const have = new Set(presets.map((p) => p.id));
+    return BUILTIN_PRESETS.filter((p) => !have.has(p.id));
+  }, [presets]);
+
+  async function handleAddMissingBuiltins() {
+    if (missingBuiltins.length === 0) return;
+    const ok = await persist([...presets, ...missingBuiltins]);
+    if (ok) {
+      toast.success(`Added ${missingBuiltins.length} built-in${missingBuiltins.length === 1 ? "" : "s"}`);
+    }
+  }
 
   if (auth.state === "loading") {
     return <AuthShell>Checking access…</AuthShell>;
@@ -546,7 +608,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display font-bold text-white text-sm uppercase tracking-[0.22em]">Catalog</h2>
-              <p className="text-[11px] font-body text-white/40 mt-0.5">Drag-rank with arrows</p>
+              <p className="text-[11px] font-body text-white/40 mt-0.5">Drag rows to reorder</p>
             </div>
             <span className="text-[11px] font-mono text-white/40">{presets.length}</span>
           </div>
@@ -560,30 +622,47 @@ export default function AdminPage() {
               {presets.map((p, i) => (
                 <div
                   key={p.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, p.id)}
+                  onDragOver={(e) => handleDragOver(e, p.id)}
+                  onDragLeave={() => handleDragLeave(p.id)}
+                  onDrop={(e) => handleDrop(e, p.id)}
+                  onDragEnd={handleDragEnd}
                   className={
                     "group flex items-center gap-2 p-2 rounded-xl border transition " +
-                    (editingId === p.id
-                      ? "border-gvc-gold/40 bg-gvc-gold/5"
-                      : "border-white/[0.06] hover:border-white/15 bg-white/[0.02]")
+                    (dragId === p.id ? "opacity-40 " : "") +
+                    (dropTargetId === p.id && dragId !== p.id
+                      ? "border-gvc-gold ring-2 ring-gvc-gold/40 bg-gvc-gold/10 "
+                      : editingId === p.id
+                      ? "border-gvc-gold/40 bg-gvc-gold/5 "
+                      : "border-white/[0.06] hover:border-white/15 bg-white/[0.02] ")
                   }
                 >
-                  <div className="flex flex-col">
-                    <button
-                      onClick={() => move(p.id, -1)}
-                      disabled={i === 0}
-                      className="p-0.5 text-white/40 hover:text-gvc-gold disabled:opacity-20 disabled:cursor-not-allowed"
-                      title="Move up"
+                  <div className="flex items-center gap-0.5">
+                    <span
+                      className="cursor-grab active:cursor-grabbing text-white/30 hover:text-white/70 transition px-0.5"
+                      title="Drag to reorder"
                     >
-                      <ChevronUp className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => move(p.id, 1)}
-                      disabled={i === presets.length - 1}
-                      className="p-0.5 text-white/40 hover:text-gvc-gold disabled:opacity-20 disabled:cursor-not-allowed"
-                      title="Move down"
-                    >
-                      <ChevronDown className="w-3 h-3" />
-                    </button>
+                      <GripVertical className="w-3.5 h-3.5" />
+                    </span>
+                    <div className="flex flex-col">
+                      <button
+                        onClick={() => move(p.id, -1)}
+                        disabled={i === 0}
+                        className="p-0.5 text-white/40 hover:text-gvc-gold disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Move up"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => move(p.id, 1)}
+                        disabled={i === presets.length - 1}
+                        className="p-0.5 text-white/40 hover:text-gvc-gold disabled:opacity-20 disabled:cursor-not-allowed"
+                        title="Move down"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <span
                     className="w-12 h-12 rounded-lg ring-1 ring-white/15 shrink-0 relative overflow-hidden"
@@ -622,6 +701,17 @@ export default function AdminPage() {
             </div>
           )}
 
+          {missingBuiltins.length > 0 && (
+            <button
+              onClick={handleAddMissingBuiltins}
+              disabled={busy}
+              className="w-full mt-4 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-gvc-gold/30 hover:border-gvc-gold/60 hover:bg-gvc-gold/10 text-[11px] uppercase tracking-wider text-gvc-gold/80 hover:text-gvc-gold transition disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-3 h-3" />
+              Add {missingBuiltins.length} new built-in{missingBuiltins.length === 1 ? "" : "s"} ({missingBuiltins.map((p) => p.name).join(", ")})
+            </button>
+          )}
+
           {(() => {
             const optimizableCount = presets.filter(
               (p) => p.bg.kind === "image" && isDataUrlImage(p.bg.url) && !isWebpDataUrl(p.bg.url)
@@ -631,7 +721,7 @@ export default function AdminPage() {
               <button
                 onClick={handleReoptimize}
                 disabled={busy}
-                className="w-full mt-4 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-gvc-gold/30 hover:border-gvc-gold/60 hover:bg-gvc-gold/10 text-[11px] uppercase tracking-wider text-gvc-gold/80 hover:text-gvc-gold transition disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full mt-3 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-gvc-gold/30 hover:border-gvc-gold/60 hover:bg-gvc-gold/10 text-[11px] uppercase tracking-wider text-gvc-gold/80 hover:text-gvc-gold transition disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-3 h-3" />
                 Re-encode {optimizableCount} image{optimizableCount === 1 ? "" : "s"} to WebP
