@@ -1489,18 +1489,18 @@ export default function Home() {
         <div className="grid sm:grid-cols-3 gap-5">
           {[
             {
-              title: "Drop",
-              body: `Paste, drag, or click. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS}.`,
+              title: "Drag & Drop",
+              body: `Drop your screen in and go. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS} screens in 1 frame.`,
               icon: <ClipboardPaste className="w-5 h-5" />,
             },
             {
-              title: "Style",
-              body: "14 backgrounds, your own gradients, and live effects: glow, reflection, tilt, stack.",
+              title: "Style It",
+              body: "Pick a background, add glow & shadows, set aspect ratio, and so much more.",
               icon: <Sliders className="w-5 h-5" />,
             },
             {
-              title: "Ship",
-              body: "Pure-canvas PNG export. Your screenshots, framed and arranged, straight to Downloads.",
+              title: "Ship It",
+              body: "Export your masterpiece as a PNG. Your screenshots, framed and arranged, straight into your downloads folder.",
               icon: <Download className="w-5 h-5" />,
             },
           ].map((f, i) => (
