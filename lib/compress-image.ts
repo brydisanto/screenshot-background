@@ -2,10 +2,10 @@
 // Returns a data URL that's safe to ship over Vercel's 4.5MB serverless body limit
 // and small enough to live happily in Redis.
 
-const MAX_DIM = 2048;
-const WEBP_QUALITY = 0.85;
-const JPEG_QUALITY = 0.88;
-const TARGET_BYTES = 1.8 * 1024 * 1024;
+const MAX_DIM = 1920;
+const WEBP_QUALITY = 0.75;
+const JPEG_QUALITY = 0.78;
+export const TARGET_BYTES = 220 * 1024; // ~220KB; keeps a 20-preset catalog under Vercel's 4.5MB body cap
 
 let webpSupport: boolean | null = null;
 function supportsWebpEncoding(): boolean {
@@ -77,8 +77,8 @@ function encodeFromImage(img: HTMLImageElement, sourceIsPng: boolean): EncodeRes
   // Step quality down if still oversized
   if (dataUrl.length > TARGET_BYTES && (mime === "image/webp" || mime === "image/jpeg")) {
     let q = quality;
-    while (dataUrl.length > TARGET_BYTES && q > 0.5) {
-      q -= 0.08;
+    while (dataUrl.length > TARGET_BYTES && q > 0.3) {
+      q -= 0.07;
       dataUrl = canvas.toDataURL(mime, q);
     }
   }
@@ -87,10 +87,21 @@ function encodeFromImage(img: HTMLImageElement, sourceIsPng: boolean): EncodeRes
     mime = "image/jpeg";
     let q = JPEG_QUALITY;
     dataUrl = canvas.toDataURL("image/jpeg", q);
-    while (dataUrl.length > TARGET_BYTES && q > 0.5) {
-      q -= 0.08;
+    while (dataUrl.length > TARGET_BYTES && q > 0.3) {
+      q -= 0.07;
       dataUrl = canvas.toDataURL("image/jpeg", q);
     }
+  }
+  // Last resort: scale dimensions down 25% and try again
+  if (dataUrl.length > TARGET_BYTES && (w > 800 || h > 800)) {
+    const newW = Math.round(w * 0.75);
+    const newH = Math.round(h * 0.75);
+    canvas.width = newW;
+    canvas.height = newH;
+    ctx.drawImage(img, 0, 0, newW, newH);
+    dataUrl = canvas.toDataURL(mime === "image/png" ? "image/jpeg" : mime, 0.7);
+    w = newW;
+    h = newH;
   }
 
   return {
@@ -108,17 +119,19 @@ export async function compressForUpload(file: File): Promise<EncodeResult> {
   return encodeFromImage(img, file.type === "image/png");
 }
 
-// Re-encode an existing data URL (e.g. legacy JPEG) to the current preferred format.
-// Returns null if the URL is not a data URL or recompression doesn't help.
+// Re-encode an existing data URL to fit the current target.
+// Returns null if not a data URL or no meaningful savings.
 export async function recompressDataUrl(
-  url: string
+  url: string,
+  options: { force?: boolean } = {}
 ): Promise<{ dataUrl: string; bytesBefore: number; bytesAfter: number; format: "webp" | "jpeg" | "png" } | null> {
   if (!url.startsWith("data:image/")) return null;
   const bytesBefore = url.length;
+  // If already well under target, skip unless forced
+  if (!options.force && bytesBefore <= TARGET_BYTES * 1.05) return null;
   const img = await loadImage(url);
   const sourceIsPng = url.startsWith("data:image/png");
   const result = encodeFromImage(img, sourceIsPng);
-  // Only return if we actually saved bytes
   if (result.bytes >= bytesBefore) return null;
   return {
     dataUrl: result.dataUrl,
@@ -134,4 +147,8 @@ export function isDataUrlImage(url: string | undefined): boolean {
 
 export function isWebpDataUrl(url: string): boolean {
   return url.startsWith("data:image/webp");
+}
+
+export function isOversized(url: string | undefined): boolean {
+  return !!url && url.startsWith("data:image/") && url.length > TARGET_BYTES * 1.05;
 }

@@ -36,7 +36,7 @@ import {
   type Bg,
   type Stop,
 } from "@/lib/frame";
-import { compressForUpload, recompressDataUrl, isDataUrlImage, isWebpDataUrl } from "@/lib/compress-image";
+import { compressForUpload, recompressDataUrl, isDataUrlImage, isOversized } from "@/lib/compress-image";
 
 type Mode = "gradient" | "image" | "solid";
 
@@ -340,22 +340,22 @@ export default function AdminPage() {
 
   async function handleReoptimize() {
     const targets = presets.filter(
-      (p) => p.bg.kind === "image" && isDataUrlImage(p.bg.url) && !isWebpDataUrl(p.bg.url)
+      (p) => p.bg.kind === "image" && isOversized(p.bg.url)
     );
     if (targets.length === 0) {
-      toast("Nothing to optimize — every stored image is already up to date.");
+      toast("Every stored image is already at target size.");
       return;
     }
-    if (!confirm(`Re-encode ${targets.length} image preset${targets.length === 1 ? "" : "s"} to WebP?`)) return;
+    if (!confirm(`Recompress ${targets.length} oversized image${targets.length === 1 ? "" : "s"}?`)) return;
 
     setBusy(true);
     let savedBytes = 0;
     let touched = 0;
     const updated = await Promise.all(
       presets.map(async (p) => {
-        if (p.bg.kind !== "image" || !isDataUrlImage(p.bg.url) || isWebpDataUrl(p.bg.url)) return p;
+        if (p.bg.kind !== "image" || !isOversized(p.bg.url)) return p;
         try {
-          const res = await recompressDataUrl(p.bg.url);
+          const res = await recompressDataUrl(p.bg.url, { force: true });
           if (!res) return p;
           savedBytes += res.bytesBefore - res.bytesAfter;
           touched += 1;
@@ -376,7 +376,7 @@ export default function AdminPage() {
     if (touched === 0) {
       toast("Nothing to optimize.");
     } else {
-      toast.success(`Re-encoded ${touched} preset${touched === 1 ? "" : "s"}, saved ${Math.round(savedBytes / 1024)}KB`);
+      toast.success(`Optimized ${touched} preset${touched === 1 ? "" : "s"}, saved ${Math.round(savedBytes / 1024)}KB`);
     }
   }
 
@@ -713,10 +713,10 @@ export default function AdminPage() {
           )}
 
           {(() => {
-            const optimizableCount = presets.filter(
-              (p) => p.bg.kind === "image" && isDataUrlImage(p.bg.url) && !isWebpDataUrl(p.bg.url)
+            const oversizedCount = presets.filter(
+              (p) => p.bg.kind === "image" && isOversized(p.bg.url)
             ).length;
-            if (optimizableCount === 0) return null;
+            if (oversizedCount === 0) return null;
             return (
               <button
                 onClick={handleReoptimize}
@@ -724,7 +724,7 @@ export default function AdminPage() {
                 className="w-full mt-3 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-gvc-gold/30 hover:border-gvc-gold/60 hover:bg-gvc-gold/10 text-[11px] uppercase tracking-wider text-gvc-gold/80 hover:text-gvc-gold transition disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-3 h-3" />
-                Re-encode {optimizableCount} image{optimizableCount === 1 ? "" : "s"} to WebP
+                Optimize {oversizedCount} oversized image{oversizedCount === 1 ? "" : "s"}
               </button>
             );
           })()}
