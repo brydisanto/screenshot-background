@@ -37,7 +37,6 @@ import {
   hitTestHandle,
   paintFrame,
   loadImage,
-  loadCustomPresets,
   fetchStockPresets,
   type Preset,
   type Bg,
@@ -69,14 +68,16 @@ export default function Home() {
 
   const [presetId, setPresetId] = useState("vibetown");
   const [stockPresets, setStockPresets] = useState<Preset[]>(BUILTIN_PRESETS);
-  const [customPresets, setCustomPresets] = useState<Preset[]>([]);
 
+  // One-off custom backgrounds (session only, not persisted)
   const [customGradient, setCustomGradient] = useState<{ a: string; b: string; angle: number }>({
     a: "#FFE048",
     b: "#FF5F1F",
     angle: 135,
   });
   const [customMode, setCustomMode] = useState(false);
+  const [customImageUrl, setCustomImageUrl] = useState<string | null>(null);
+  const customBgFileInputRef = useRef<HTMLInputElement>(null);
 
   const [padding, setPadding] = useState(64);
   const [radius, setRadius] = useState(16);
@@ -124,7 +125,7 @@ export default function Home() {
     "default"
   );
 
-  // Load stock from server + custom (Studio) from localStorage; refresh on focus & on events
+  // Load stock from server; refresh on focus & on stock-change events
   useEffect(() => {
     let alive = true;
     const refreshStock = () => {
@@ -132,28 +133,23 @@ export default function Home() {
         if (alive) setStockPresets(p);
       });
     };
-    const refreshCustom = () => setCustomPresets(loadCustomPresets());
 
     refreshStock();
-    refreshCustom();
 
     const onFocus = () => refreshStock();
     window.addEventListener("focus", onFocus);
-    window.addEventListener("storage", refreshCustom);
-    window.addEventListener("gvc-presets-changed", refreshCustom);
     window.addEventListener("gvc-stock-changed", refreshStock);
     return () => {
       alive = false;
       window.removeEventListener("focus", onFocus);
-      window.removeEventListener("storage", refreshCustom);
-      window.removeEventListener("gvc-presets-changed", refreshCustom);
       window.removeEventListener("gvc-stock-changed", refreshStock);
     };
   }, []);
 
-  const allPresets = useMemo(() => [...stockPresets, ...customPresets], [stockPresets, customPresets]);
-
   const activeBg: Bg = useMemo(() => {
+    if (customImageUrl) {
+      return { kind: "image", url: customImageUrl, mode: "cover" };
+    }
     if (customMode) {
       return {
         kind: "linear",
@@ -164,13 +160,14 @@ export default function Home() {
         ],
       };
     }
-    return allPresets.find((p) => p.id === presetId)?.bg ?? BUILTIN_PRESETS[0].bg;
-  }, [customMode, customGradient, presetId, allPresets]);
+    return stockPresets.find((p) => p.id === presetId)?.bg ?? BUILTIN_PRESETS[0].bg;
+  }, [customImageUrl, customMode, customGradient, presetId, stockPresets]);
 
   const activePresetName = useMemo(() => {
+    if (customImageUrl) return "Custom Image";
     if (customMode) return "Custom Gradient";
-    return allPresets.find((p) => p.id === presetId)?.name ?? "";
-  }, [customMode, presetId, allPresets]);
+    return stockPresets.find((p) => p.id === presetId)?.name ?? "";
+  }, [customImageUrl, customMode, presetId, stockPresets]);
 
   const params: FrameParams = useMemo(
     () => ({ mode, bg: activeBg, padding, radius, shadow, chromeOn, chromeTitle, aspect, effects }),
@@ -733,6 +730,27 @@ export default function Home() {
   function pickPreset(id: string) {
     setPresetId(id);
     setCustomMode(false);
+    setCustomImageUrl(null);
+  }
+
+  function handleCustomBgFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Pick an image file");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Image too big. Max 15MB.");
+      return;
+    }
+    import("@/lib/compress-image").then(({ compressForUpload }) => {
+      compressForUpload(file)
+        .then(({ dataUrl, width, height }) => {
+          setCustomImageUrl(dataUrl);
+          setCustomMode(false);
+          toast.success(`Custom background loaded (${width}×${height})`);
+        })
+        .catch(() => toast.error("Couldn't process that image"));
+    });
   }
 
   const hasShots = shotsWithImages.length > 0;
@@ -756,18 +774,7 @@ export default function Home() {
         ))}
       </div>
 
-      <Link
-        href="/studio"
-        className="group fixed sm:absolute top-5 right-5 sm:right-8 z-20 inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 rounded-full bg-gvc-gold text-gvc-black font-display font-bold text-xs sm:text-sm uppercase tracking-[0.18em] shadow-[0_0_25px_rgba(255,224,72,0.35)] hover:shadow-[0_0_40px_rgba(255,224,72,0.55)] active:scale-95 transition-all"
-      >
-        <Sparkles className="w-4 h-4 group-hover:rotate-12 transition" />
-        <span>The Studio</span>
-        <span className="text-[9px] font-display font-bold uppercase tracking-[0.22em] text-gvc-gold bg-gvc-black/85 rounded-full px-2 py-0.5">
-          Pro
-        </span>
-      </Link>
-
-      <section className="relative z-10 px-6 sm:px-10 pt-8 sm:pt-10 pb-10 text-center max-w-6xl mx-auto">
+      <section className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-10 text-center max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1096,12 +1103,15 @@ export default function Home() {
                   <SwatchButton
                     key={p.id}
                     preset={p}
-                    active={!customMode && presetId === p.id}
+                    active={!customMode && !customImageUrl && presetId === p.id}
                     onClick={() => pickPreset(p.id)}
                   />
                 ))}
                 <button
-                  onClick={() => setCustomMode((v) => !v)}
+                  onClick={() => {
+                    setCustomMode((v) => !v);
+                    setCustomImageUrl(null);
+                  }}
                   title="Custom gradient"
                   className={
                     "aspect-square rounded-lg flex items-center justify-center transition-all " +
@@ -1112,24 +1122,44 @@ export default function Home() {
                 >
                   <Plus className="w-4 h-4" />
                 </button>
+                <button
+                  onClick={() => customBgFileInputRef.current?.click()}
+                  title="Upload your own background"
+                  className={
+                    "aspect-square rounded-lg flex items-center justify-center transition-all relative overflow-hidden " +
+                    (customImageUrl
+                      ? "ring-2 ring-gvc-gold ring-offset-2 ring-offset-gvc-dark scale-95"
+                      : "ring-1 ring-dashed ring-white/15 hover:ring-gvc-gold/50 text-white/50 hover:text-gvc-gold bg-white/[0.02]")
+                  }
+                  style={
+                    customImageUrl
+                      ? { background: `url(${customImageUrl}) center/cover` }
+                      : undefined
+                  }
+                >
+                  {!customImageUrl && <Upload className="w-4 h-4" />}
+                </button>
+                <input
+                  ref={customBgFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleCustomBgFile(f);
+                    if (e.target) e.target.value = "";
+                  }}
+                />
               </div>
-
-              {customPresets.length > 0 && (
-                <div className="space-y-2 -mt-3">
-                  <div className="text-[10px] font-body uppercase tracking-[0.18em] text-white/35 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-gvc-gold/60" />
-                    From The Studio
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {customPresets.map((p) => (
-                      <SwatchButton
-                        key={p.id}
-                        preset={p}
-                        active={!customMode && presetId === p.id}
-                        onClick={() => pickPreset(p.id)}
-                      />
-                    ))}
-                  </div>
+              {customImageUrl && (
+                <div className="flex items-center gap-2 text-[10px] font-body text-white/45 -mt-3">
+                  <span className="flex-1 truncate">Using uploaded background</span>
+                  <button
+                    onClick={() => setCustomImageUrl(null)}
+                    className="text-white/40 hover:text-red-300 uppercase tracking-wider"
+                  >
+                    clear
+                  </button>
                 </div>
               )}
 
@@ -1177,11 +1207,7 @@ export default function Home() {
                         />
                       </div>
                       <p className="text-[10px] text-white/35 leading-relaxed">
-                        Want more stops, image backgrounds, or to save this preset for later? Open{" "}
-                        <Link href="/studio" className="text-gvc-gold hover:underline">
-                          The Studio
-                        </Link>
-                        .
+                        One-off gradient for this session. Pick a stock preset to switch back.
                       </p>
                     </div>
                   </motion.div>

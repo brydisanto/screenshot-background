@@ -787,32 +787,6 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-// ---------- Custom preset storage (Studio: end-user presets) ----------
-
-const STORAGE_KEY = "gvc-frame-custom-presets";
-
-export function loadCustomPresets(): Preset[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw) as Preset[];
-    return data.map((p) => ({ ...p, custom: true }));
-  } catch {
-    return [];
-  }
-}
-
-export function saveCustomPresets(presets: Preset[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
-}
-
-export function emitPresetChange() {
-  if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent("gvc-presets-changed"));
-}
-
 // ---------- Stock preset storage (Admin: built-in catalog) ----------
 //
 // Stock presets live on the server and are shared across all team members.

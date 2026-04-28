@@ -955,12 +955,7 @@ export default function AdminPage() {
             <ArrowLeft className="w-3 h-3" />
             Back to the tool
           </Link>
-          <Link
-            href="/studio"
-            className="text-[11px] font-body text-white/30 hover:text-gvc-gold transition"
-          >
-            The Studio (customer-facing)
-          </Link>
+          <span className="text-[11px] font-body text-white/30">Stock catalog · Internal team</span>
         </div>
       </footer>
     </main>

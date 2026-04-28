@@ -23,8 +23,8 @@ const mundial = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "screenshot-background",
-  description: "Made using the GVC Builder Kit",
+  title: "GVC Screenshot Tool",
+  description: "Turn ordinary screenshots into beautiful sharable moments.",
   icons: {
     icon: "/shaka.png",
     apple: "/shaka.png",
