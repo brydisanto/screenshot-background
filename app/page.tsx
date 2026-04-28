@@ -769,34 +769,24 @@ export default function Home() {
         </Link>
       </header>
 
-      <section className="relative z-10 px-6 sm:px-10 pt-10 sm:pt-16 pb-10 text-center max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gvc-gold/10 border border-gvc-gold/20 mb-6"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
-          <span className="text-xs font-body text-gvc-gold uppercase tracking-widest">
-            One drop. One click. One hero asset.
-          </span>
-        </motion.div>
+      <section className="relative z-10 px-6 sm:px-10 pt-10 sm:pt-16 pb-10 text-center max-w-6xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="font-display font-black text-shimmer text-5xl sm:text-7xl leading-[0.9] tracking-tight uppercase"
+          className="font-display font-black text-gvc-gold uppercase leading-[0.88] tracking-[-0.02em] text-[15vw] sm:text-[13vw] lg:text-[11vw] xl:text-[160px]"
         >
-          Frame your<br />screens.
+          Share beautiful<br />screenshots
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.6 }}
-          className="mt-6 text-white/60 font-body text-base sm:text-lg max-w-xl mx-auto leading-relaxed"
+          className="mt-8 text-white/65 font-body text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
         >
-          Drop a screenshot — or up to {MAX_SHOTS} — and arrange them. Layer on glow, reflection, tilt. Ship a hero
-          asset that earns the scroll.
+          Turn ordinary screenshots into beautiful sharable moments. Drop a screenshot (or up to {MAX_SHOTS}) and
+          customize it to fit your vibe. Pick a background, add glow & shadows, set aspect ratio, and so much more.
+          Share a screen that stops the scroll.
         </motion.p>
       </section>
 
