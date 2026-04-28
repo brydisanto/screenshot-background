@@ -761,15 +761,32 @@ export default function Home() {
   return (
     <main className="min-h-screen relative pb-24">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(14)].map((_, i) => (
+        {/* Floating embers — varied sizes and tempo */}
+        {[...Array(32)].map((_, i) => {
+          const variant = i % 7 === 0 ? "ember-orb" : i % 3 === 0 ? "ember-lg" : "";
+          const twinkle = i % 5 === 2 ? " ember-twinkle" : "";
+          return (
+            <div
+              key={`e-${i}`}
+              className={`ember ${variant}${twinkle}`}
+              style={{
+                left: `${(i * 7.3 + 4) % 100}%`,
+                top: `${(i * 13.7 + 8) % 100}%`,
+                animationDelay: `${(i * 0.4) % 7}s`,
+                animationDuration: variant === "ember-orb" ? `${9 + (i % 4)}s` : `${5 + (i % 5)}s`,
+              }}
+            />
+          );
+        })}
+        {/* Rising particles — sweep up the full viewport */}
+        {[...Array(10)].map((_, i) => (
           <div
-            key={i}
-            className="ember"
+            key={`r-${i}`}
+            className="rising-particle"
             style={{
-              left: `${(i * 7.3 + 4) % 100}%`,
-              top: `${(i * 13.7 + 8) % 100}%`,
-              animationDelay: `${i * 0.5}s`,
-              animationDuration: `${5 + (i % 5)}s`,
+              left: `${(i * 11 + 3) % 100}%`,
+              animationDelay: `${i * 1.6}s`,
+              animationDuration: `${10 + (i % 4) * 2.5}s`,
             }}
           />
         ))}
