@@ -774,7 +774,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="font-display font-black text-gvc-gold uppercase leading-[0.88] tracking-[-0.02em] text-[15vw] sm:text-[13vw] lg:text-[11vw] xl:text-[160px]"
+          className="font-display font-black text-gvc-gold uppercase leading-[0.9] tracking-tight text-5xl sm:text-6xl lg:text-7xl"
         >
           Share beautiful<br />screenshots
         </motion.h1>
