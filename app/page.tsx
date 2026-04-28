@@ -796,8 +796,7 @@ export default function Home() {
           className="mt-8 text-white/65 font-body text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
         >
           Turn ordinary screenshots into beautiful sharable moments. Drop a screenshot (or up to {MAX_SHOTS}) and
-          customize it to fit your vibe. Pick a background, add glow & shadows, set aspect ratio, and so much more.
-          Share a screen that stops the scroll.
+          customize it to fit your vibe. Share a screen that stops the scroll.
         </motion.p>
       </section>
 
