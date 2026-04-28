@@ -150,6 +150,90 @@ export const BUILTIN_PRESETS: Preset[] = [
     },
   },
   {
+    id: "plasma",
+    name: "Plasma",
+    swatch: "linear-gradient(135deg,#FF0080 0%,#7928CA 50%,#FF4D00 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#FF0080", pos: 0 },
+        { color: "#7928CA", pos: 0.5 },
+        { color: "#FF4D00", pos: 1 },
+      ],
+    },
+  },
+  {
+    id: "ocean",
+    name: "Ocean",
+    swatch: "linear-gradient(135deg,#0F2027 0%,#203A43 50%,#2C5364 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#0F2027", pos: 0 },
+        { color: "#203A43", pos: 0.5 },
+        { color: "#2C5364", pos: 1 },
+      ],
+    },
+  },
+  {
+    id: "royal",
+    name: "Royal",
+    swatch: "linear-gradient(135deg,#2D1B69 0%,#6B21A8 55%,#FFE048 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#2D1B69", pos: 0 },
+        { color: "#6B21A8", pos: 0.55 },
+        { color: "#FFE048", pos: 1 },
+      ],
+    },
+  },
+  {
+    id: "citrus",
+    name: "Citrus",
+    swatch: "linear-gradient(135deg,#FFE048 0%,#FB923C 50%,#EF4444 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#FFE048", pos: 0 },
+        { color: "#FB923C", pos: 0.5 },
+        { color: "#EF4444", pos: 1 },
+      ],
+    },
+  },
+  {
+    id: "frost",
+    name: "Frost",
+    swatch: "linear-gradient(135deg,#E0F2FE 0%,#BAE6FD 50%,#7DD3FC 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#E0F2FE", pos: 0 },
+        { color: "#BAE6FD", pos: 0.5 },
+        { color: "#7DD3FC", pos: 1 },
+      ],
+    },
+  },
+  {
+    id: "twilight",
+    name: "Twilight",
+    swatch: "linear-gradient(135deg,#0F172A 0%,#4C1D95 50%,#DB2777 100%)",
+    bg: {
+      kind: "linear",
+      angle: 135,
+      stops: [
+        { color: "#0F172A", pos: 0 },
+        { color: "#4C1D95", pos: 0.5 },
+        { color: "#DB2777", pos: 1 },
+      ],
+    },
+  },
+  {
     id: "carbon",
     name: "Carbon CLI",
     swatch: "#050505",
