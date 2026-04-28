@@ -770,6 +770,17 @@ export default function Home() {
       </header>
 
       <section className="relative z-10 px-6 sm:px-10 pt-10 sm:pt-16 pb-10 text-center max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gvc-gold/10 border border-gvc-gold/20 mb-6"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
+          <span className="text-xs font-body text-gvc-gold uppercase tracking-widest">
+            One drop. One click. One hero asset.
+          </span>
+        </motion.div>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
