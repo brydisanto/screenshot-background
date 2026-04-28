@@ -191,6 +191,23 @@ body::after {
   75% { transform: rotate(-4deg); }
 }
 
+/* Idle shaka — long pause + brief wiggle every cycle */
+@keyframes shakaIdle {
+  0%, 88%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-14deg); }
+  93% { transform: rotate(10deg); }
+  96% { transform: rotate(-5deg); }
+}
+
+.shaka-idle {
+  animation: shakaIdle 5s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+.shaka-idle:hover {
+  animation: wiggle 0.5s ease-in-out;
+}
+
 /* ---------------------------------- */
 /* Rising Gold Particles              */
 /* ---------------------------------- */

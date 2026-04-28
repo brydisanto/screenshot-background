@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import {
@@ -776,9 +777,24 @@ export default function Home() {
 
       <section className="relative z-10 px-6 sm:px-10 pt-12 sm:pt-16 pb-10 text-center max-w-6xl mx-auto">
         <motion.div
+          initial={{ opacity: 0, scale: 0.6, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 160, damping: 14 }}
+          className="flex justify-center mb-5"
+        >
+          <Image
+            src="/shaka.png"
+            alt="GVC shaka"
+            width={64}
+            height={64}
+            className="shaka-idle drop-shadow-[0_0_20px_rgba(255,224,72,0.4)]"
+            priority
+          />
+        </motion.div>
+        <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gvc-gold/10 border border-gvc-gold/20 mb-6"
         >
           <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
