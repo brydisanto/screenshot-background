@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Local env + data
+.env
+.env*.local
+.data/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Vercel
+.vercel
