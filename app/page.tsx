@@ -1523,25 +1523,25 @@ export default function Home() {
       </section>
 
       <footer className="relative z-10 mt-24 px-6 sm:px-10 pb-10">
-        <div className="max-w-6xl mx-auto pt-8 border-t border-white/[0.06] flex items-center justify-between gap-4">
+        <div className="relative max-w-6xl mx-auto pt-8 border-t border-white/[0.06] flex items-center justify-center">
           <a
             href="https://goodvibesclub.ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="opacity-70 hover:opacity-100 transition"
+            className="opacity-60 hover:opacity-100 transition"
             title="Good Vibes Club"
           >
             <Image
               src="/gvc-logotype.svg"
               alt="Good Vibes Club"
-              width={140}
-              height={28}
-              className="h-6 w-auto"
+              width={100}
+              height={20}
+              className="h-4 w-auto"
             />
           </a>
           <Link
             href="/admin"
-            className="text-white/20 hover:text-white/60 transition"
+            className="absolute right-0 top-1/2 -translate-y-1/2 mt-3 text-white/20 hover:text-white/60 transition"
             title="Operator panel"
           >
             <span className="text-[10px] uppercase tracking-wider">Operator</span>
