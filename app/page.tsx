@@ -1523,7 +1523,22 @@ export default function Home() {
       </section>
 
       <footer className="relative z-10 mt-24 px-6 sm:px-10 pb-10">
-        <div className="max-w-6xl mx-auto pt-8 border-t border-white/[0.06] flex justify-end">
+        <div className="max-w-6xl mx-auto pt-8 border-t border-white/[0.06] flex items-center justify-between gap-4">
+          <a
+            href="https://goodvibesclub.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="opacity-70 hover:opacity-100 transition"
+            title="Good Vibes Club"
+          >
+            <Image
+              src="/gvc-logotype.svg"
+              alt="Good Vibes Club"
+              width={140}
+              height={28}
+              className="h-6 w-auto"
+            />
+          </a>
           <Link
             href="/admin"
             className="text-white/20 hover:text-white/60 transition"
