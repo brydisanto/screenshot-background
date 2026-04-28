@@ -833,7 +833,7 @@ export default function Home() {
           transition={{ delay: 0.15, duration: 0.6 }}
           className="mt-8 text-white/65 font-body text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
         >
-          Turn ordinary screenshots into beautiful sharable moments. Drop a screenshot (or up to {MAX_SHOTS}) and
+          Turn ordinary screenshots into beautiful sharable moments. Drop in an image (or up to {MAX_SHOTS}) and
           customize it to fit your vibe. Share a screen that stops the scroll.
         </motion.p>
       </section>
@@ -1506,8 +1506,8 @@ export default function Home() {
         <div className="grid sm:grid-cols-3 gap-5">
           {[
             {
-              title: "Drag & Drop",
-              body: `Drop your screen in and go. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS} screens in 1 frame.`,
+              title: "Drop It",
+              body: `Drop a screenshot in and go. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS} images in 1 frame.`,
               icon: <ClipboardPaste className="w-5 h-5" />,
             },
             {
