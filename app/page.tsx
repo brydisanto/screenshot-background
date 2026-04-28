@@ -756,20 +756,18 @@ export default function Home() {
         ))}
       </div>
 
-      <header className="relative z-10 px-6 sm:px-10 py-6 flex items-center justify-end">
-        <Link
-          href="/studio"
-          className="group inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 rounded-full bg-gvc-gold text-gvc-black font-display font-bold text-xs sm:text-sm uppercase tracking-[0.18em] shadow-[0_0_25px_rgba(255,224,72,0.35)] hover:shadow-[0_0_40px_rgba(255,224,72,0.55)] active:scale-95 transition-all"
-        >
-          <Sparkles className="w-4 h-4 group-hover:rotate-12 transition" />
-          <span>The Studio</span>
-          <span className="text-[9px] font-display font-bold uppercase tracking-[0.22em] text-gvc-gold bg-gvc-black/85 rounded-full px-2 py-0.5">
-            Pro
-          </span>
-        </Link>
-      </header>
+      <Link
+        href="/studio"
+        className="group fixed sm:absolute top-5 right-5 sm:right-8 z-20 inline-flex items-center gap-2.5 px-4 sm:px-5 py-2.5 rounded-full bg-gvc-gold text-gvc-black font-display font-bold text-xs sm:text-sm uppercase tracking-[0.18em] shadow-[0_0_25px_rgba(255,224,72,0.35)] hover:shadow-[0_0_40px_rgba(255,224,72,0.55)] active:scale-95 transition-all"
+      >
+        <Sparkles className="w-4 h-4 group-hover:rotate-12 transition" />
+        <span>The Studio</span>
+        <span className="text-[9px] font-display font-bold uppercase tracking-[0.22em] text-gvc-gold bg-gvc-black/85 rounded-full px-2 py-0.5">
+          Pro
+        </span>
+      </Link>
 
-      <section className="relative z-10 px-6 sm:px-10 pt-10 sm:pt-16 pb-10 text-center max-w-6xl mx-auto">
+      <section className="relative z-10 px-6 sm:px-10 pt-8 sm:pt-10 pb-10 text-center max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
