@@ -34,6 +34,7 @@ import {
   type Bg,
   type Stop,
 } from "@/lib/frame";
+import { compressForUpload } from "@/lib/compress-image";
 
 type Mode = "gradient" | "image" | "solid";
 
@@ -308,22 +309,22 @@ export default function AdminPage() {
     toast.success("Catalog reset to defaults");
   }
 
-  function onImageFile(file: File) {
+  async function onImageFile(file: File) {
     if (!file.type.startsWith("image/")) {
       toast.error("Pick an image file");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too big. Max 5MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Image too big. Max 15MB before compression.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
+    try {
+      const { dataUrl, width, height, bytes } = await compressForUpload(file);
       setDraft((d) => ({ ...d, imageUrl: dataUrl }));
-      toast.success("Image attached");
-    };
-    reader.readAsDataURL(file);
+      toast.success(`Optimized to ${width}×${height}, ${Math.round(bytes / 1024)}KB`);
+    } catch {
+      toast.error("Couldn't process that image");
+    }
   }
 
   const draftBg: Bg = useMemo(() => {
