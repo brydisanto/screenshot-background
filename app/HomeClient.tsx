@@ -196,7 +196,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
 
   // Add shots from sources. Replaces in single mode, appends in multi.
   const addShotsFromSources = useCallback(
-    (srcs: string[]) => {
+    (srcs: string[], opts: { transparent?: boolean } = {}) => {
       if (srcs.length === 0) return;
       Promise.all(
         srcs.map(
@@ -229,6 +229,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                   y: 0.5,
                   scale: 1,
                   rotation: 0,
+                  transparent: opts.transparent,
                 },
               ];
               setSelectedShotId(id);
@@ -256,6 +257,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                 y: cy,
                 scale: 1,
                 rotation: (idx % 2 === 0 ? -1 : 1) * (idx * 1.5),
+                transparent: opts.transparent,
               });
               if (i === accepted.length - 1) setSelectedShotId(id);
             });
@@ -669,7 +671,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
         if (opts.transparent) {
           const { cutOutBackground } = await import("@/lib/cutout");
           const cut = await cutOutBackground(url);
-          addShotsFromSources([cut]);
+          addShotsFromSources([cut], { transparent: true });
         } else {
           addShotsFromSources([url]);
         }

@@ -32,6 +32,9 @@ export interface Shot {
   scale: number;     // multiplier on base size (1 = ~36% of canvas width)
   rotation: number;  // degrees
   title?: string;    // per-shot chrome title (multi mode)
+  // If true, skip the window frame and chrome — image is drawn directly so
+  // its alpha channel reveals the canvas background (e.g. cut-out NFTs).
+  transparent?: boolean;
 }
 
 export interface FrameParams {
@@ -545,6 +548,107 @@ export function hitTestCorner(
 
 export type ShotWithImage = Shot & { img: HTMLImageElement };
 
+// Draws a transparent-PNG subject (e.g. cut-out NFT character) with no
+// surrounding window frame. Effects that make sense on a silhouette —
+// shadow, glow, reflection — are applied; chrome/border-stroke do not
+// apply here because there's no frame.
+function drawTransparentSubject(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  p: FrameParams,
+  scale: number,
+  selected = false
+) {
+  // Reflection — flipped image fading out below the silhouette
+  if (p.effects.reflection) {
+    ctx.save();
+    const reflectionH = h * 0.5;
+    const intensity = p.effects.reflectionIntensity / 100;
+    ctx.translate(x, y + h);
+    ctx.scale(1, -1);
+    ctx.translate(-x, -(y + h));
+    ctx.globalAlpha = 0.45 * intensity;
+    ctx.drawImage(img, x, y - h, w, h);
+    ctx.restore();
+    ctx.save();
+    const reflGrad = ctx.createLinearGradient(0, y + h, 0, y + h + reflectionH);
+    reflGrad.addColorStop(0, `rgba(0,0,0,${0.55 * intensity})`);
+    reflGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = reflGrad;
+    ctx.fillRect(x, y + h, w, reflectionH);
+    ctx.restore();
+  }
+
+  // Drop shadow / glow on the silhouette itself (alpha-aware).
+  if (p.shadow > 0 || p.effects.glowColor) {
+    ctx.save();
+    if (p.effects.glowColor) {
+      const intensity = p.effects.glowIntensity / 100;
+      ctx.shadowColor = withAlpha(p.effects.glowColor, 0.55 * intensity + 0.2);
+      ctx.shadowBlur = (p.shadow > 0 ? p.shadow : 60) * 1.8 * scale * (0.6 + intensity * 0.6);
+    } else {
+      ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
+      ctx.shadowBlur = p.shadow * 1.6 * scale;
+      ctx.shadowOffsetY = p.shadow * 0.45 * scale;
+    }
+    ctx.drawImage(img, x, y, w, h);
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, x, y, w, h);
+  }
+
+  // Selection halo (preview only) — wrap a dashed box around the bounding rect
+  if (selected) {
+    ctx.save();
+    ctx.strokeStyle = "#FFE048";
+    ctx.lineWidth = 3 * scale;
+    ctx.setLineDash([8 * scale, 6 * scale]);
+    ctx.strokeRect(x - 4 * scale, y - 4 * scale, w + 8 * scale, h + 8 * scale);
+    ctx.restore();
+
+    ctx.save();
+    ctx.setLineDash([]);
+    const hs = 14 * scale;
+    const corners: Array<[number, number]> = [
+      [x, y],
+      [x + w, y],
+      [x, y + h],
+      [x + w, y + h],
+    ];
+    for (const [hx, hy] of corners) {
+      ctx.fillStyle = "#FFE048";
+      ctx.strokeStyle = "#050505";
+      ctx.lineWidth = 2 * scale;
+      ctx.beginPath();
+      ctx.rect(hx - hs / 2, hy - hs / 2, hs, hs);
+      ctx.fill();
+      ctx.stroke();
+    }
+    // Rotation handle
+    const stemTopY = y - ROTATE_HANDLE_OFFSET * scale;
+    const cxStem = x + w / 2;
+    ctx.strokeStyle = "#FFE048";
+    ctx.lineWidth = 2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cxStem, y - 4 * scale);
+    ctx.lineTo(cxStem, stemTopY + 8 * scale);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cxStem, stemTopY, 8 * scale, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFE048";
+    ctx.fill();
+    ctx.strokeStyle = "#050505";
+    ctx.lineWidth = 2 * scale;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+
 interface DrawnFrame {
   ctx: CanvasRenderingContext2D;
   scale: number;
@@ -758,8 +862,9 @@ export function paintFrame(
   if (p.mode === "single") {
     const shot = shots[0];
     const padPx = p.padding * 4 * scale;
+    const localChromeH = shot.transparent ? 0 : chromeH;
     const availW = cw - padPx * 2;
-    const availH = ch - padPx * 2 - chromeH;
+    const availH = ch - padPx * 2 - localChromeH;
     if (availW <= 0 || availH <= 0) return;
     const imgAspect = shot.dims.w / shot.dims.h;
     let drawW: number;
@@ -772,7 +877,7 @@ export function paintFrame(
       drawW = availH * imgAspect;
     }
     const frameW = drawW;
-    const frameH = drawH + chromeH;
+    const frameH = drawH + localChromeH;
     const frameX = (cw - frameW) / 2;
     const frameY = (ch - frameH) / 2;
 
@@ -783,26 +888,30 @@ export function paintFrame(
       ctx.rotate(tiltRad);
       ctx.translate(-(frameX + frameW / 2), -(frameY + frameH / 2));
     }
-    drawSingleFrame(
-      {
-        ctx,
-        scale,
-        frameX,
-        frameY,
-        frameW,
-        frameH,
-        drawX: frameX,
-        drawY: frameY + chromeH,
-        drawW,
-        drawH,
-        chromeH,
-        radius: r,
-        img: shot.img,
-        title: p.chromeTitle,
-      },
-      p,
-      false
-    );
+    if (shot.transparent) {
+      drawTransparentSubject(ctx, shot.img, frameX, frameY, drawW, drawH, p, scale);
+    } else {
+      drawSingleFrame(
+        {
+          ctx,
+          scale,
+          frameX,
+          frameY,
+          frameW,
+          frameH,
+          drawX: frameX,
+          drawY: frameY + localChromeH,
+          drawW,
+          drawH,
+          chromeH: localChromeH,
+          radius: r,
+          img: shot.img,
+          title: p.chromeTitle,
+        },
+        p,
+        false
+      );
+    }
     if (p.effects.tilt !== 0) ctx.restore();
     return;
   }
@@ -813,8 +922,9 @@ export function paintFrame(
     const aspect = shot.dims.w / shot.dims.h;
     const drawW = baseW;
     const drawH = baseW / aspect;
+    const localChromeH = shot.transparent ? 0 : chromeH;
     const frameW = drawW;
-    const frameH = drawH + chromeH;
+    const frameH = drawH + localChromeH;
     const cxN = shot.x * cw;
     const cyN = shot.y * ch;
     const frameX = cxN - frameW / 2;
@@ -828,26 +938,30 @@ export function paintFrame(
       ctx.rotate(totalRot);
       ctx.translate(-cxN, -cyN);
     }
-    drawSingleFrame(
-      {
-        ctx,
-        scale,
-        frameX,
-        frameY,
-        frameW,
-        frameH,
-        drawX: frameX,
-        drawY: frameY + chromeH,
-        drawW,
-        drawH,
-        chromeH,
-        radius: r,
-        img: shot.img,
-        title: shot.title || "",
-      },
-      p,
-      selectedId === shot.id
-    );
+    if (shot.transparent) {
+      drawTransparentSubject(ctx, shot.img, frameX, frameY, drawW, drawH, p, scale, selectedId === shot.id);
+    } else {
+      drawSingleFrame(
+        {
+          ctx,
+          scale,
+          frameX,
+          frameY,
+          frameW,
+          frameH,
+          drawX: frameX,
+          drawY: frameY + localChromeH,
+          drawW,
+          drawH,
+          chromeH: localChromeH,
+          radius: r,
+          img: shot.img,
+          title: shot.title || "",
+        },
+        p,
+        selectedId === shot.id
+      );
+    }
     ctx.restore();
   }
 }
