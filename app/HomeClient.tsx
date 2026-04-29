@@ -885,16 +885,33 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                 }}
               />
               {hasShots && (
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={mode === "multi" && shots.length >= MAX_SHOTS}
-                    className="px-3 py-1.5 rounded-lg text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
-                    title={mode === "multi" ? "Add another shot" : "Replace screenshot"}
-                  >
-                    {mode === "multi" ? <Plus className="w-3 h-3" /> : null}
-                    {mode === "multi" ? "Add" : "Replace"}
-                  </button>
+                <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 justify-end">
+                  {mode === "multi" ? (
+                    <>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={shots.length >= MAX_SHOTS}
+                        className="px-3 py-1.5 rounded-lg text-xs font-body text-white/80 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        title="Add another shot"
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add Shot
+                      </button>
+                      {shots.length < MAX_SHOTS && (
+                        <div className="bg-black/60 border border-white/10 rounded-full backdrop-blur">
+                          <GvcInput onLoad={loadGvc} stopPropagation />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-lg text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition"
+                      title="Replace screenshot"
+                    >
+                      Replace
+                    </button>
+                  )}
                   <button
                     onClick={clearAll}
                     className="px-3 py-1.5 rounded-lg text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition flex items-center gap-1.5"
@@ -1037,16 +1054,13 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                         </button>
                       ))}
                       {shots.length < MAX_SHOTS && (
-                        <>
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full p-2 rounded-lg border border-dashed border-white/10 hover:border-gvc-gold/30 hover:bg-gvc-gold/5 text-[11px] uppercase tracking-wider text-white/50 hover:text-gvc-gold transition flex items-center justify-center gap-2"
-                          >
-                            <Plus className="w-3 h-3" />
-                            Add shot
-                          </button>
-                          <GvcInput onLoad={loadGvc} fullWidth />
-                        </>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full p-2 rounded-lg border border-dashed border-white/10 hover:border-gvc-gold/30 hover:bg-gvc-gold/5 text-[11px] uppercase tracking-wider text-white/50 hover:text-gvc-gold transition flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-3 h-3" />
+                          Add shot
+                        </button>
                       )}
                     </div>
 
@@ -1795,11 +1809,9 @@ function DropZone({
 function GvcInput({
   onLoad,
   stopPropagation,
-  fullWidth,
 }: {
   onLoad: (id: number, opts?: { transparent?: boolean }) => Promise<boolean>;
   stopPropagation?: boolean;
-  fullWidth?: boolean;
 }) {
   const [tokenInput, setTokenInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1821,7 +1833,7 @@ function GvcInput({
     : {};
 
   return (
-    <div className={"inline-flex items-center gap-2 flex-wrap " + (fullWidth ? "w-full justify-center" : "")}>
+    <div className="inline-flex items-center justify-center gap-2 flex-wrap">
       <div
         {...stop}
         className={
