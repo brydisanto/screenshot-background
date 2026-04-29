@@ -946,7 +946,8 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
             </div>
 
             {/* Controls */}
-            <div className="p-6 sm:p-7 space-y-7 max-h-[800px] overflow-y-auto">
+            <div className="relative">
+              <div className="p-6 sm:p-7 space-y-7 max-h-[800px] overflow-y-auto gvc-panel-scroll">
               {/* Mode toggle */}
               <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-black/40 border border-white/[0.08]">
                 <ModeBtn active={mode === "single"} onClick={() => changeMode("single")}>
@@ -1496,6 +1497,9 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                   Exports at {exportDims.w} × {exportDims.h}
                 </p>
               )}
+              </div>
+              {/* Bottom fade hint — indicates more content below the fold */}
+              <div className="pointer-events-none absolute left-0 right-2 bottom-0 h-10 bg-gradient-to-t from-gvc-dark/95 via-gvc-dark/60 to-transparent" />
             </div>
           </div>
         </div>
