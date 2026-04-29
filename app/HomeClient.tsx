@@ -812,9 +812,8 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gvc-gold/10 border border-gvc-gold/20 mb-6"
+          className="inline-flex items-center px-3 py-1.5 rounded-full bg-gvc-gold/10 border border-gvc-gold/20 mb-6"
         >
-          <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
           <span className="text-xs font-body text-gvc-gold uppercase tracking-widest">
             Share beautiful screenshots
           </span>
@@ -823,7 +822,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="font-display font-black text-gvc-gold uppercase leading-[0.9] tracking-tight text-5xl sm:text-6xl lg:text-7xl"
+          className="font-display font-black text-gvc-gold uppercase leading-[0.9] tracking-tight text-6xl sm:text-7xl lg:text-8xl"
         >
           The Framery
         </motion.h1>
@@ -833,8 +832,8 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           transition={{ delay: 0.15, duration: 0.6 }}
           className="mt-8 text-white/65 font-body text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
         >
-          Turn ordinary images into beautiful sharable moments. Drop in any image (or up to {MAX_SHOTS}) and
-          customize it to fit your vibe. Share a screen that stops the scroll.
+          Turn ordinary images into beautiful sharable moments. Drop in any image (or up to five) and customize it
+          to fit your vibe. Share a screen that stops the scroll.
         </motion.p>
       </section>
 
@@ -1788,7 +1787,7 @@ function DropZone({
         <Upload className="w-7 h-7" />
       </div>
       <h2 className="font-display font-black text-2xl sm:text-3xl text-white uppercase tracking-tight mb-2">
-        {mode === "multi" ? `Drop up to ${MAX_SHOTS} screenshots` : "Drop a screenshot"}
+        {mode === "multi" ? "Drop up to 5 images" : "Drop an image"}
       </h2>
       <p className="text-white/50 font-body text-sm mb-6 max-w-md mx-auto">
         Drag in {mode === "multi" ? "files" : "a file"}, paste from clipboard{" "}
