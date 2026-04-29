@@ -816,7 +816,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
         >
           <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
           <span className="text-xs font-body text-gvc-gold uppercase tracking-widest">
-            One drop. One click. One hero asset.
+            Drop it. Style it. Ship it.
           </span>
         </motion.div>
         <motion.h1
