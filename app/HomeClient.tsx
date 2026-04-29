@@ -893,22 +893,20 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={shots.length >= MAX_SHOTS}
-                        className="px-3 py-1.5 rounded-lg text-xs font-body text-white/80 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-full text-xs font-body text-white/80 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
                         title="Add another shot"
                       >
                         <Plus className="w-3 h-3" />
                         Add Shot
                       </button>
                       {shots.length < MAX_SHOTS && (
-                        <div className="bg-black/60 border border-white/10 rounded-full backdrop-blur">
-                          <GvcInput onLoad={loadGvc} stopPropagation />
-                        </div>
+                        <GvcInput onLoad={loadGvc} stopPropagation darkChip />
                       )}
                     </>
                   ) : (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 rounded-lg text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition"
+                      className="px-3 py-1.5 rounded-full text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition"
                       title="Replace screenshot"
                     >
                       Replace
@@ -916,7 +914,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                   )}
                   <button
                     onClick={clearAll}
-                    className="px-3 py-1.5 rounded-lg text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-full text-xs font-body text-white/70 bg-black/60 hover:bg-black/80 hover:text-white border border-white/10 backdrop-blur transition flex items-center gap-1.5"
                   >
                     <Trash2 className="w-3 h-3" />
                     Clear
@@ -1811,9 +1809,11 @@ function DropZone({
 function GvcInput({
   onLoad,
   stopPropagation,
+  darkChip,
 }: {
   onLoad: (id: number, opts?: { transparent?: boolean }) => Promise<boolean>;
   stopPropagation?: boolean;
+  darkChip?: boolean;
 }) {
   const [tokenInput, setTokenInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1839,7 +1839,10 @@ function GvcInput({
       <div
         {...stop}
         className={
-          "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition"
+          "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border transition " +
+          (darkChip
+            ? "bg-black/60 border-white/10 hover:bg-black/80 hover:border-gvc-gold/40 backdrop-blur"
+            : "bg-white/[0.06] hover:bg-white/[0.10] border-white/10 hover:border-gvc-gold/40")
         }
       >
         <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
@@ -1881,16 +1884,16 @@ function GvcInput({
         }}
         title="Cut out the flat NFT background so only the character shows"
         className={
-          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-display font-bold uppercase tracking-[0.18em] transition " +
+          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-body transition " +
           (transparent
-            ? "bg-gvc-gold/20 border-gvc-gold/50 text-gvc-gold"
-            : "bg-white/[0.04] border-white/10 text-white/45 hover:text-white/80 hover:border-white/30")
+            ? "bg-gvc-gold/15 border-gvc-gold/50 text-gvc-gold"
+            : "bg-black/60 border-white/10 text-white/70 hover:bg-black/80 hover:text-white")
         }
       >
         <span
           className={
-            "w-3 h-3 rounded-sm border flex items-center justify-center text-[8px] " +
-            (transparent ? "border-gvc-gold bg-gvc-gold text-gvc-black" : "border-white/40")
+            "w-3 h-3 rounded-[3px] flex items-center justify-center text-[8px] leading-none " +
+            (transparent ? "bg-gvc-gold text-gvc-black" : "border border-white/40")
           }
         >
           {transparent ? "✓" : ""}
