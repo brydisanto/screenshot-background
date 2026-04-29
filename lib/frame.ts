@@ -1,3 +1,5 @@
+import { apiUrl } from "./base-url";
+
 export type Stop = { color: string; pos: number };
 
 export type Bg =
@@ -880,7 +882,7 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 
 export async function fetchStockPresets(): Promise<Preset[]> {
   try {
-    const res = await fetch("/api/stock-presets", { cache: "no-store" });
+    const res = await fetch(apiUrl("/api/stock-presets"), { cache: "no-store" });
     if (!res.ok) return BUILTIN_PRESETS;
     const data = (await res.json()) as Preset[];
     return Array.isArray(data) && data.length > 0 ? data : BUILTIN_PRESETS;
@@ -891,7 +893,7 @@ export async function fetchStockPresets(): Promise<Preset[]> {
 
 export async function saveStockPresets(presets: Preset[]): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch("/api/stock-presets", {
+    const res = await fetch(apiUrl("/api/stock-presets"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(presets),
@@ -906,7 +908,7 @@ export async function saveStockPresets(presets: Preset[]): Promise<{ ok: boolean
 
 export async function resetStockPresets(): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch("/api/stock-presets", { method: "DELETE" });
+    const res = await fetch(apiUrl("/api/stock-presets"), { method: "DELETE" });
     if (res.ok) return { ok: true };
     const data = await res.json().catch(() => ({}));
     return { ok: false, error: (data as { error?: string }).error || `HTTP ${res.status}` };

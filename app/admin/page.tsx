@@ -37,6 +37,7 @@ import {
   type Stop,
 } from "@/lib/frame";
 import { compressForUpload, recompressDataUrl, isDataUrlImage, isOversized } from "@/lib/compress-image";
+import { apiUrl } from "@/lib/base-url";
 
 type Mode = "gradient" | "image" | "solid";
 
@@ -83,7 +84,7 @@ export default function AdminPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/operator/me", { cache: "no-store" });
+        const res = await fetch(apiUrl("/api/operator/me"), { cache: "no-store" });
         const data = (await res.json()) as {
           authenticated: boolean;
           passwordConfigured: boolean;
@@ -111,13 +112,13 @@ export default function AdminPage() {
     if (!pwInput) return;
     setSubmitting(true);
     try {
-      const res = await fetch("/api/operator/login", {
+      const res = await fetch(apiUrl("/api/operator/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pwInput }),
       });
       if (res.ok) {
-        const me = await fetch("/api/operator/me", { cache: "no-store" }).then((r) => r.json());
+        const me = await fetch(apiUrl("/api/operator/me"), { cache: "no-store" }).then((r) => r.json());
         setAuth({ state: "authed", storage: me.storage });
         const stock = await fetchStockPresets();
         setPresets(stock);
@@ -133,7 +134,7 @@ export default function AdminPage() {
   }
 
   async function handleLogout() {
-    await fetch("/api/operator/logout", { method: "POST" });
+    await fetch(apiUrl("/api/operator/logout"), { method: "POST" });
     setAuth({ state: "locked" });
     toast.success("Locked");
   }
