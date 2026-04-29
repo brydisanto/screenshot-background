@@ -544,6 +544,8 @@ export function hitTestCorner(
 }
 
 
+export type ShotWithImage = Shot & { img: HTMLImageElement };
+
 interface DrawnFrame {
   ctx: CanvasRenderingContext2D;
   scale: number;
