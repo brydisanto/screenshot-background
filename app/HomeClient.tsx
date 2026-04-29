@@ -648,7 +648,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
   // Resolves ipfs:// to the public IPFS gateway and pipes through the same
   // shot-loader path as a normal upload.
   const loadGvc = useCallback(
-    async (id: number): Promise<boolean> => {
+    async (id: number, opts: { transparent?: boolean } = {}): Promise<boolean> => {
       if (!Number.isInteger(id) || id < 0 || id > 6968) {
         toast.error("Token ID must be 0–6968");
         return false;
@@ -666,7 +666,13 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
         const url = token.image.startsWith("ipfs://")
           ? token.image.replace("ipfs://", "https://ipfs.io/ipfs/")
           : token.image;
-        addShotsFromSources([url]);
+        if (opts.transparent) {
+          const { cutOutBackground } = await import("@/lib/cutout");
+          const cut = await cutOutBackground(url);
+          addShotsFromSources([cut]);
+        } else {
+          addShotsFromSources([url]);
+        }
         return true;
       } catch {
         toast.error("Couldn't load that token");
@@ -1748,7 +1754,7 @@ function DropZone({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onPickFile: () => void;
-  onLoadGvc: (id: number) => Promise<boolean>;
+  onLoadGvc: (id: number, opts?: { transparent?: boolean }) => Promise<boolean>;
 }) {
   return (
     <div
@@ -1791,17 +1797,18 @@ function GvcInput({
   stopPropagation,
   fullWidth,
 }: {
-  onLoad: (id: number) => Promise<boolean>;
+  onLoad: (id: number, opts?: { transparent?: boolean }) => Promise<boolean>;
   stopPropagation?: boolean;
   fullWidth?: boolean;
 }) {
   const [tokenInput, setTokenInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [transparent, setTransparent] = useState(false);
 
   async function tryLoad() {
     const n = parseInt(tokenInput, 10);
     setLoading(true);
-    const ok = await onLoad(n);
+    const ok = await onLoad(n, { transparent });
     setLoading(false);
     if (ok) setTokenInput("");
   }
@@ -1814,42 +1821,67 @@ function GvcInput({
     : {};
 
   return (
-    <div
-      {...stop}
-      className={
-        "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition " +
-        (fullWidth ? "w-full justify-center" : "")
-      }
-    >
-      <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
-        GVC <span className="text-gvc-gold">#</span>
-      </span>
-      <input
-        type="number"
-        min={0}
-        max={6968}
-        value={tokenInput}
-        onChange={(e) => setTokenInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
+    <div className={"inline-flex items-center gap-2 flex-wrap " + (fullWidth ? "w-full justify-center" : "")}>
+      <div
+        {...stop}
+        className={
+          "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition"
+        }
+      >
+        <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
+          GVC <span className="text-gvc-gold">#</span>
+        </span>
+        <input
+          type="number"
+          min={0}
+          max={6968}
+          value={tokenInput}
+          onChange={(e) => setTokenInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              tryLoad();
+            }
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          placeholder="0–6968"
+          className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             tryLoad();
-          }
-          e.stopPropagation();
-        }}
-        onClick={(e) => e.stopPropagation()}
-        placeholder="0–6968"
-        className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
-      />
+          }}
+          disabled={loading || !tokenInput}
+          className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          {loading ? "Loading…" : "Load"}
+        </button>
+      </div>
       <button
+        {...stop}
         onClick={(e) => {
           e.stopPropagation();
-          tryLoad();
+          setTransparent((v) => !v);
         }}
-        disabled={loading || !tokenInput}
-        className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
+        title="Cut out the flat NFT background so only the character shows"
+        className={
+          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-display font-bold uppercase tracking-[0.18em] transition " +
+          (transparent
+            ? "bg-gvc-gold/20 border-gvc-gold/50 text-gvc-gold"
+            : "bg-white/[0.04] border-white/10 text-white/45 hover:text-white/80 hover:border-white/30")
+        }
       >
-        {loading ? "Loading…" : "Load"}
+        <span
+          className={
+            "w-3 h-3 rounded-sm border flex items-center justify-center text-[8px] " +
+            (transparent ? "border-gvc-gold bg-gvc-gold text-gvc-black" : "border-white/40")
+          }
+        >
+          {transparent ? "✓" : ""}
+        </span>
+        Transparent
       </button>
     </div>
   );
