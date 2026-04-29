@@ -23,7 +23,7 @@ const mundial = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GVC Screenshot Tool",
+  title: "The Framery — GVC",
   description: "Turn ordinary screenshots into beautiful sharable moments.",
   icons: {
     icon: "/shaka.png",
