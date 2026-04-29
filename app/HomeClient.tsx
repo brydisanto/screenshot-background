@@ -1506,7 +1506,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           {[
             {
               title: "Drop It",
-              body: `Drop a screenshot in and go. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS} images in 1 frame.`,
+              body: `Drop any image in and go. Single mode for hero shots, Multi for arranging up to ${MAX_SHOTS} screens in 1 frame.`,
               icon: <ClipboardPaste className="w-5 h-5" />,
             },
             {
@@ -1516,7 +1516,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
             },
             {
               title: "Ship It",
-              body: "Export your masterpiece as a PNG. Your screenshots, framed and arranged, straight into your downloads folder.",
+              body: "Export your masterpiece as a PNG. Your images, framed and arranged, straight into your downloads folder.",
               icon: <Download className="w-5 h-5" />,
             },
           ].map((f, i) => (
