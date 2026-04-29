@@ -196,7 +196,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
 
   // Add shots from sources. Replaces in single mode, appends in multi.
   const addShotsFromSources = useCallback(
-    (srcs: string[], opts: { transparent?: boolean } = {}) => {
+    (srcs: string[]) => {
       if (srcs.length === 0) return;
       Promise.all(
         srcs.map(
@@ -229,7 +229,6 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                   y: 0.5,
                   scale: 1,
                   rotation: 0,
-                  transparent: opts.transparent,
                 },
               ];
               setSelectedShotId(id);
@@ -257,7 +256,6 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                 y: cy,
                 scale: 1,
                 rotation: (idx % 2 === 0 ? -1 : 1) * (idx * 1.5),
-                transparent: opts.transparent,
               });
               if (i === accepted.length - 1) setSelectedShotId(id);
             });
@@ -650,7 +648,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
   // Resolves ipfs:// to the public IPFS gateway and pipes through the same
   // shot-loader path as a normal upload.
   const loadGvc = useCallback(
-    async (id: number, opts: { transparent?: boolean } = {}): Promise<boolean> => {
+    async (id: number): Promise<boolean> => {
       if (!Number.isInteger(id) || id < 0 || id > 6968) {
         toast.error("Token ID must be 0–6968");
         return false;
@@ -668,13 +666,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
         const url = token.image.startsWith("ipfs://")
           ? token.image.replace("ipfs://", "https://ipfs.io/ipfs/")
           : token.image;
-        if (opts.transparent) {
-          const { cutOutBackground } = await import("@/lib/cutout");
-          const cut = await cutOutBackground(url);
-          addShotsFromSources([cut], { transparent: true });
-        } else {
-          addShotsFromSources([url]);
-        }
+        addShotsFromSources([url]);
         return true;
       } catch {
         toast.error("Couldn't load that token");
@@ -1811,18 +1803,17 @@ function GvcInput({
   stopPropagation,
   darkChip,
 }: {
-  onLoad: (id: number, opts?: { transparent?: boolean }) => Promise<boolean>;
+  onLoad: (id: number) => Promise<boolean>;
   stopPropagation?: boolean;
   darkChip?: boolean;
 }) {
   const [tokenInput, setTokenInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [transparent, setTransparent] = useState(false);
 
   async function tryLoad() {
     const n = parseInt(tokenInput, 10);
     setLoading(true);
-    const ok = await onLoad(n, { transparent });
+    const ok = await onLoad(n);
     setLoading(false);
     if (ok) setTokenInput("");
   }
@@ -1835,70 +1826,44 @@ function GvcInput({
     : {};
 
   return (
-    <div className="inline-flex items-center justify-center gap-2 flex-wrap">
-      <div
-        {...stop}
-        className={
-          "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border transition " +
-          (darkChip
-            ? "bg-black/60 border-white/10 hover:bg-black/80 hover:border-gvc-gold/40 backdrop-blur"
-            : "bg-white/[0.06] hover:bg-white/[0.10] border-white/10 hover:border-gvc-gold/40")
-        }
-      >
-        <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
-          GVC <span className="text-gvc-gold">#</span>
-        </span>
-        <input
-          type="number"
-          min={0}
-          max={6968}
-          value={tokenInput}
-          onChange={(e) => setTokenInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              tryLoad();
-            }
-            e.stopPropagation();
-          }}
-          onClick={(e) => e.stopPropagation()}
-          placeholder="0–6968"
-          className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
-        />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
+    <div
+      {...stop}
+      className={
+        "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border transition " +
+        (darkChip
+          ? "bg-black/60 border-white/10 hover:bg-black/80 hover:border-gvc-gold/40 backdrop-blur"
+          : "bg-white/[0.06] hover:bg-white/[0.10] border-white/10 hover:border-gvc-gold/40")
+      }
+    >
+      <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
+        GVC <span className="text-gvc-gold">#</span>
+      </span>
+      <input
+        type="number"
+        min={0}
+        max={6968}
+        value={tokenInput}
+        onChange={(e) => setTokenInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
             tryLoad();
-          }}
-          disabled={loading || !tokenInput}
-          className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          {loading ? "Loading…" : "Load"}
-        </button>
-      </div>
+          }
+          e.stopPropagation();
+        }}
+        onClick={(e) => e.stopPropagation()}
+        placeholder="0–6968"
+        className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
+      />
       <button
-        {...stop}
         onClick={(e) => {
           e.stopPropagation();
-          setTransparent((v) => !v);
+          tryLoad();
         }}
-        title="Cut out the flat NFT background so only the character shows"
-        className={
-          "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-body transition " +
-          (transparent
-            ? "bg-gvc-gold/15 border-gvc-gold/50 text-gvc-gold"
-            : "bg-black/60 border-white/10 text-white/70 hover:bg-black/80 hover:text-white")
-        }
+        disabled={loading || !tokenInput}
+        className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        <span
-          className={
-            "w-3 h-3 rounded-[3px] flex items-center justify-center text-[8px] leading-none " +
-            (transparent ? "bg-gvc-gold text-gvc-black" : "border border-white/40")
-          }
-        >
-          {transparent ? "✓" : ""}
-        </span>
-        Transparent
+        {loading ? "Loading…" : "Load"}
       </button>
     </div>
   );
