@@ -1031,13 +1031,16 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                         </button>
                       ))}
                       {shots.length < MAX_SHOTS && (
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-full p-2 rounded-lg border border-dashed border-white/10 hover:border-gvc-gold/30 hover:bg-gvc-gold/5 text-[11px] uppercase tracking-wider text-white/50 hover:text-gvc-gold transition flex items-center justify-center gap-2"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Add shot
-                        </button>
+                        <>
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full p-2 rounded-lg border border-dashed border-white/10 hover:border-gvc-gold/30 hover:bg-gvc-gold/5 text-[11px] uppercase tracking-wider text-white/50 hover:text-gvc-gold transition flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Add shot
+                          </button>
+                          <GvcInput onLoad={loadGvc} fullWidth />
+                        </>
                       )}
                     </div>
 
@@ -1747,17 +1750,6 @@ function DropZone({
   onPickFile: () => void;
   onLoadGvc: (id: number) => Promise<boolean>;
 }) {
-  const [tokenInput, setTokenInput] = useState("");
-  const [loadingGvc, setLoadingGvc] = useState(false);
-
-  async function tryLoadGvc() {
-    const n = parseInt(tokenInput, 10);
-    setLoadingGvc(true);
-    const ok = await onLoadGvc(n);
-    setLoadingGvc(false);
-    if (ok) setTokenInput("");
-  }
-
   return (
     <div
       onDragEnter={onDragEnter}
@@ -1787,43 +1779,78 @@ function DropZone({
           <Upload className="w-3.5 h-3.5" />
           Choose {mode === "multi" ? "files" : "file"}
         </span>
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition"
-        >
-          <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
-            GVC <span className="text-gvc-gold">#</span>
-          </span>
-          <input
-            type="number"
-            min={0}
-            max={6968}
-            value={tokenInput}
-            onChange={(e) => setTokenInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                tryLoadGvc();
-              }
-              e.stopPropagation();
-            }}
-            onClick={(e) => e.stopPropagation()}
-            placeholder="0–6968"
-            className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
-          />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              tryLoadGvc();
-            }}
-            disabled={loadingGvc || !tokenInput}
-            className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            {loadingGvc ? "Loading…" : "Load"}
-          </button>
-        </div>
+        <GvcInput onLoad={onLoadGvc} stopPropagation />
       </div>
     </div>
   );
 }
 
+
+function GvcInput({
+  onLoad,
+  stopPropagation,
+  fullWidth,
+}: {
+  onLoad: (id: number) => Promise<boolean>;
+  stopPropagation?: boolean;
+  fullWidth?: boolean;
+}) {
+  const [tokenInput, setTokenInput] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function tryLoad() {
+    const n = parseInt(tokenInput, 10);
+    setLoading(true);
+    const ok = await onLoad(n);
+    setLoading(false);
+    if (ok) setTokenInput("");
+  }
+
+  const stop = stopPropagation
+    ? {
+        onClick: (e: React.MouseEvent) => e.stopPropagation(),
+        onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
+      }
+    : {};
+
+  return (
+    <div
+      {...stop}
+      className={
+        "inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition " +
+        (fullWidth ? "w-full justify-center" : "")
+      }
+    >
+      <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
+        GVC <span className="text-gvc-gold">#</span>
+      </span>
+      <input
+        type="number"
+        min={0}
+        max={6968}
+        value={tokenInput}
+        onChange={(e) => setTokenInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            tryLoad();
+          }
+          e.stopPropagation();
+        }}
+        onClick={(e) => e.stopPropagation()}
+        placeholder="0–6968"
+        className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
+      />
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          tryLoad();
+        }}
+        disabled={loading || !tokenInput}
+        className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        {loading ? "Loading…" : "Load"}
+      </button>
+    </div>
+  );
+}
