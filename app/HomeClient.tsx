@@ -799,14 +799,13 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           transition={{ type: "spring", stiffness: 160, damping: 14 }}
           className="flex justify-center mb-5"
         >
-          <Image
-            src="/shaka.png"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/shaka.png`}
             alt="GVC shaka"
             width={64}
             height={64}
             className="shaka-idle drop-shadow-[0_0_20px_rgba(255,224,72,0.4)]"
-            priority
-            unoptimized
           />
         </motion.div>
         <motion.div
@@ -1549,13 +1548,11 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
             className="opacity-60 hover:opacity-100 transition"
             title="Good Vibes Club"
           >
-            <Image
-              src="/gvc-logotype.svg"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/gvc-logotype.svg`}
               alt="Good Vibes Club"
-              width={100}
-              height={20}
               className="h-4 w-auto"
-              unoptimized
             />
           </a>
           <Link

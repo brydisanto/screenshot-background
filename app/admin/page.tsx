@@ -537,13 +537,13 @@ export default function AdminPage() {
           className="flex items-center gap-3 text-white/60 hover:text-white transition group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition" />
-          <Image
-            src="/shaka.png"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/shaka.png`}
             alt="GVC"
             width={32}
             height={32}
             className="hover:animate-wiggle drop-shadow-[0_0_15px_rgba(255,224,72,0.4)]"
-            unoptimized
           />
           <span className="font-display font-bold text-sm tracking-[0.25em] text-white/70 uppercase">
             GVC // Frame
