@@ -543,6 +543,7 @@ export default function AdminPage() {
             width={32}
             height={32}
             className="hover:animate-wiggle drop-shadow-[0_0_15px_rgba(255,224,72,0.4)]"
+            unoptimized
           />
           <span className="font-display font-bold text-sm tracking-[0.25em] text-white/70 uppercase">
             GVC // Frame

@@ -806,6 +806,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
             height={64}
             className="shaka-idle drop-shadow-[0_0_20px_rgba(255,224,72,0.4)]"
             priority
+            unoptimized
           />
         </motion.div>
         <motion.div
@@ -816,7 +817,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
         >
           <Sparkles className="w-3.5 h-3.5 text-gvc-gold" />
           <span className="text-xs font-body text-gvc-gold uppercase tracking-widest">
-            Drop it. Style it. Ship it.
+            Share beautiful screenshots
           </span>
         </motion.div>
         <motion.h1
@@ -825,7 +826,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           transition={{ duration: 0.6, delay: 0.05 }}
           className="font-display font-black text-gvc-gold uppercase leading-[0.9] tracking-tight text-5xl sm:text-6xl lg:text-7xl"
         >
-          Share beautiful<br />screenshots
+          The Framery
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -833,7 +834,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           transition={{ delay: 0.15, duration: 0.6 }}
           className="mt-8 text-white/65 font-body text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
         >
-          Turn ordinary screenshots into beautiful sharable moments. Drop in an image (or up to {MAX_SHOTS}) and
+          Turn ordinary images into beautiful sharable moments. Drop in any image (or up to {MAX_SHOTS}) and
           customize it to fit your vibe. Share a screen that stops the scroll.
         </motion.p>
       </section>
@@ -1554,6 +1555,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
               width={100}
               height={20}
               className="h-4 w-auto"
+              unoptimized
             />
           </a>
           <Link
