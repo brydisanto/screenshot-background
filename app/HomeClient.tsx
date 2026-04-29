@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import {
   Upload,
   Download,
-  Sparkles,
   Trash2,
   Sliders,
   Layers,
@@ -204,6 +203,9 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
           (src) =>
             new Promise<{ src: string; img: HTMLImageElement }>((resolve, reject) => {
               const img = new window.Image();
+              // Allow cross-origin images (e.g. IPFS gateways) so canvas export
+              // doesn't taint and toBlob() works.
+              if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
               img.onload = () => resolve({ src, img });
               img.onerror = reject;
               img.src = src;
@@ -642,65 +644,37 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
     toast.success("Cleared");
   }
 
-  const loadSample = useCallback(() => {
-    const c = document.createElement("canvas");
-    c.width = 1280;
-    c.height = 800;
-    const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#0B0B0B";
-    ctx.fillRect(0, 0, 1280, 800);
-    ctx.fillStyle = "#121212";
-    ctx.fillRect(0, 0, 240, 800);
-    ctx.fillStyle = "rgba(255,255,255,0.06)";
-    ctx.fillRect(240, 0, 1, 800);
-    ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.font = "600 14px ui-sans-serif, system-ui";
-    ["Dashboard", "Frames", "Library", "Export queue", "Settings"].forEach((t, i) => {
-      ctx.fillText(t, 24, 80 + i * 36);
-    });
-    ctx.fillStyle = "rgba(255,255,255,0.04)";
-    ctx.fillRect(240, 0, 1040, 56);
-    ctx.fillStyle = "#FFE048";
-    drawRound(ctx, 280, 96, 960, 220, 18);
-    ctx.fill();
-    ctx.fillStyle = "#050505";
-    ctx.font = "900 56px ui-sans-serif, system-ui";
-    ctx.fillText("GOOD VIBES, COMPOUNDED", 312, 196);
-    ctx.font = "500 18px ui-sans-serif, system-ui";
-    ctx.fillStyle = "rgba(5,5,5,0.7)";
-    ctx.fillText("Your weekly motion report → up and to the right.", 312, 240);
-    [0, 1, 2].forEach((i) => {
-      ctx.fillStyle = "#121212";
-      drawRound(ctx, 280 + i * 320, 340, 300, 180, 14);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
-      ctx.lineWidth = 1;
-      drawRound(ctx, 280 + i * 320, 340, 300, 180, 14);
-      ctx.stroke();
-      ctx.fillStyle = "#FFE048";
-      ctx.font = "900 36px ui-sans-serif, system-ui";
-      ctx.fillText(["+128%", "1,510", "0.649"][i], 300 + i * 320, 410);
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "500 14px ui-sans-serif, system-ui";
-      ctx.fillText(["Engagement", "Holders", "Floor (ETH)"][i], 300 + i * 320, 440);
-    });
-    ctx.fillStyle = "#121212";
-    drawRound(ctx, 280, 552, 960, 200, 14);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    drawRound(ctx, 280, 552, 960, 200, 14);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(310, 700);
-    for (let x = 0; x <= 900; x += 30) {
-      const y = 700 - 30 - Math.sin(x / 80) * 30 - x / 12;
-      ctx.lineTo(310 + x, y);
-    }
-    ctx.strokeStyle = "#FFE048";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    addShotsFromSources([c.toDataURL("image/png")]);
-  }, [addShotsFromSources]);
+  // Load a GVC NFT image by token ID using the bundled metadata file.
+  // Resolves ipfs:// to the public IPFS gateway and pipes through the same
+  // shot-loader path as a normal upload.
+  const loadGvc = useCallback(
+    async (id: number): Promise<boolean> => {
+      if (!Number.isInteger(id) || id < 0 || id > 6968) {
+        toast.error("Token ID must be 0–6968");
+        return false;
+      }
+      try {
+        const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+        const res = await fetch(`${base}/gvc-metadata.json`, { cache: "force-cache" });
+        if (!res.ok) throw new Error("metadata fetch failed");
+        const metadata = (await res.json()) as Record<string, { image: string; name?: string }>;
+        const token = metadata[String(id)];
+        if (!token?.image) {
+          toast.error(`No GVC #${id}`);
+          return false;
+        }
+        const url = token.image.startsWith("ipfs://")
+          ? token.image.replace("ipfs://", "https://ipfs.io/ipfs/")
+          : token.image;
+        addShotsFromSources([url]);
+        return true;
+      } catch {
+        toast.error("Couldn't load that token");
+        return false;
+      }
+    },
+    [addShotsFromSources]
+  );
 
   async function exportPng() {
     if (shotsWithImages.length === 0) {
@@ -863,7 +837,7 @@ export default function HomeClient({ initialStock }: { initialStock: Preset[] })
                     if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
                   }}
                   onPickFile={() => fileInputRef.current?.click()}
-                  onLoadSample={loadSample}
+                  onLoadGvc={loadGvc}
                 />
               ) : (
                 <div ref={previewWrapRef} className="w-full h-full min-h-[400px] flex items-center justify-center">
@@ -1762,7 +1736,7 @@ function DropZone({
   onDragOver,
   onDrop,
   onPickFile,
-  onLoadSample,
+  onLoadGvc,
 }: {
   mode: Mode;
   isDragging: boolean;
@@ -1771,8 +1745,19 @@ function DropZone({
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onPickFile: () => void;
-  onLoadSample: () => void;
+  onLoadGvc: (id: number) => Promise<boolean>;
 }) {
+  const [tokenInput, setTokenInput] = useState("");
+  const [loadingGvc, setLoadingGvc] = useState(false);
+
+  async function tryLoadGvc() {
+    const n = parseInt(tokenInput, 10);
+    setLoadingGvc(true);
+    const ok = await onLoadGvc(n);
+    setLoadingGvc(false);
+    if (ok) setTokenInput("");
+  }
+
   return (
     <div
       onDragEnter={onDragEnter}
@@ -1802,32 +1787,43 @@ function DropZone({
           <Upload className="w-3.5 h-3.5" />
           Choose {mode === "multi" ? "files" : "file"}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onLoadSample();
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/70 font-body text-xs uppercase tracking-wider transition"
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-gvc-gold/40 transition"
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          Try a sample
-        </button>
+          <span className="text-[10px] font-display font-bold text-white/55 uppercase tracking-[0.18em]">
+            GVC <span className="text-gvc-gold">#</span>
+          </span>
+          <input
+            type="number"
+            min={0}
+            max={6968}
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                tryLoadGvc();
+              }
+              e.stopPropagation();
+            }}
+            onClick={(e) => e.stopPropagation()}
+            placeholder="0–6968"
+            className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              tryLoadGvc();
+            }}
+            disabled={loadingGvc || !tokenInput}
+            className="px-3 py-1.5 rounded-full bg-gvc-gold/15 hover:bg-gvc-gold/30 text-gvc-gold text-[10px] font-display font-bold uppercase tracking-wider transition disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {loadingGvc ? "Loading…" : "Load"}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function drawRound(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  const rr = Math.max(0, Math.min(r, w / 2, h / 2));
-  ctx.beginPath();
-  ctx.moveTo(x + rr, y);
-  ctx.lineTo(x + w - rr, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
-  ctx.lineTo(x + w, y + h - rr);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
-  ctx.lineTo(x + rr, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
-  ctx.lineTo(x, y + rr);
-  ctx.quadraticCurveTo(x, y, x + rr, y);
-  ctx.closePath();
-}
