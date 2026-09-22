@@ -1842,8 +1842,12 @@ function GvcInput({
         type="number"
         min={0}
         max={6968}
+        maxLength={4}
         value={tokenInput}
-        onChange={(e) => setTokenInput(e.target.value)}
+        onChange={(e) => {
+          const next = e.target.value.replace(/[^0-9]/g, "").slice(0, 4);
+          setTokenInput(next);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
@@ -1852,8 +1856,8 @@ function GvcInput({
           e.stopPropagation();
         }}
         onClick={(e) => e.stopPropagation()}
-        placeholder="0–6968"
-        className="w-20 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
+        placeholder="0000"
+        className="w-12 bg-transparent text-white text-xs font-mono focus:outline-none placeholder:text-white/30"
       />
       <button
         onClick={(e) => {
